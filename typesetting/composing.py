@@ -154,7 +154,7 @@ def avoid_widows_and_orphans(actions, a, fonts, line, next_line):
     lines = unroll(line, end_line)
 
     # Single-line paragraphs produce neither widows nor orphans.
-    if len(lines) == 2:
+    if len(lines) <= 2:
         return a2, end_line  # TODO: untested
 
     original_a2 = a2
@@ -196,6 +196,9 @@ def avoid_widows_and_orphans(actions, a, fonts, line, next_line):
         fix_widow()
         if is_orphan():
             fix_orphan()
+
+    if len(lines) <= 2:
+        return a2, end_line
 
     if is_orphan() or is_widow():
         return original_a2, original_end_line
