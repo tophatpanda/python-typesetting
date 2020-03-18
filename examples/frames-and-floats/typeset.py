@@ -7,7 +7,7 @@ from typesetting import document as doc
 from typesetting import composing as c
 from typesetting import knuth
 from typesetting.pyside2_backend import get_fonts
-from typesetting.skeleton import frame_layout, unroll
+from typesetting.skeleton import frame_layout, unroll, Page, Column, Line
 from PySide2.QtCore import Qt, QPoint
 from PySide2.QtGui import QPen
 
@@ -20,6 +20,62 @@ def path_of(name):
 
 
 mm = 72 / 25.4
+
+
+def custom_layout(page_width, page_height):
+    first_frames = [
+        # left, top, width, height
+        (25, 25, 90, 145),
+        (120, 105, 80, 90),
+        (25, 200, 165, 30),
+        (30, 235, 40, 25),
+        (110, 235, 75, 40),
+    ]
+    # add unit to all numbers
+    first_frames = [
+        (l * mm, t * mm, w * mm, h * mm) for (l, t, w, h)
+        in first_frames]
+
+    first_page = Page(page_width, page_height)
+    second_page = Page(page_width, page_height)
+
+    second_frames = [
+        (20 * mm, 25 * mm, 80 * mm, 245 * mm),
+        (110 * mm, 25 * mm, 80 * mm, 245 * mm),
+    ]
+
+    def next_page(page):
+        return Page(page_width, page_height)
+
+    def next_column(column):
+        if column is None:
+            new_id = 0
+            return Column(first_page, new_id, *first_frames[new_id])
+        elif column.page is first_page:
+            new_id = column.id + 1
+            if new_id < len(first_frames):
+                return Column(first_page, new_id, *first_frames[new_id])
+            else:
+                new_id = 0
+                return Column(second_page, new_id, *second_frames[new_id])
+        else:
+            new_id = column.id + 1
+            assert new_id < len(second_frames)
+            page = second_page
+            return Column(page, new_id, *second_frames[new_id])
+
+    def next_line(line, leading, height):
+        if line:
+            column = line.column
+            y = line.y + height + leading
+            if y <= column.height:
+                return Line(line, column, y, [])
+        else:
+            column = None
+
+        return Line(line, next_column(column), height, [])
+
+    return next_line
 
 
 def render(out_file):
@@ -38,19 +94,7 @@ def render(out_file):
         ('roman', 'Gentium Basic', 'Roman', 8),
     ])
 
-    frames = [
-        # left, top, width, height
-        (25, 25, 90, 145),
-        (120, 105, 80, 90),
-        (25, 200, 165, 30),
-        (30, 235, 40, 25),
-        (110, 235, 75, 40),
-    ]
-    # add unit to all numbers
-    frames = [
-        (l * mm, t * mm, w * mm, h * mm) for (l, t, w, h)
-        in frames]
-    next_line = frame_layout(frames, 210, 297)
+    next_line = custom_layout(210, 297)
 
     def mark_frames(painter, frames):
         pen = QPen(Qt.black, 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
@@ -64,14 +108,14 @@ def render(out_file):
 
     lines = unroll(None, c.run(story, fonts, None, next_line))
     page = None
-    mark_frames(renderer.painter, frames)
+    # mark_frames(renderer.painter, frames)
 
     for line in lines:
         if line is None:
             continue
         if page is not None and page is not line.column.page:
             renderer.new_page()
-            mark_frames(renderer.painter, frames)
+            # mark_frames(renderer.painter, frames)
         page = line.column.page
 
         for graphic in line.graphics:
