@@ -22,15 +22,16 @@ from typesetting.skeleton import single_column_layout, unroll
 
 inch_to_mm = 25.4 / 72
 
-def main(argv):
-    parser = argparse.ArgumentParser(description='Generate slides')
-    parser.parse_args(argv)
+this_dir = os.path.dirname(__file__)
 
-    if os.path.dirname(__file__):
-        os.chdir(os.path.dirname(__file__))
 
+def path_of(name):
+    return os.path.join(this_dir, name)
+
+
+def main(out_path):
     factor = 72 / 4  # TODO: have Renderer pull from layout instead?
-    d = Renderer(16 * factor * inch_to_mm, 9 * factor * inch_to_mm)
+    d = Renderer(out_path, 16 * factor * inch_to_mm, 9 * factor * inch_to_mm)
 
     fonts = get_fonts(d.painter, [
         ('bold', 'Gentium Basic', 'Bold', 12),
@@ -96,7 +97,7 @@ def main(argv):
 
     s('markup language', '', 'plain text → document')
 
-    with open('sample.tex') as f:
+    with open(path_of('sample.tex')) as f:
         code = f.read()
     code = code.split('\n', 1)[1].rsplit('\n', 2)[0]
     code_slide(code)
@@ -121,7 +122,7 @@ def main(argv):
       'Knuth could no longer publish')
     s('So he took an entire year off to invent TeX')
 
-    with open('formula.tex') as f:
+    with open(path_of('formula.tex')) as f:
         code = f.read()
     code = code.split('\n', 1)[1].rsplit('\n', 2)[0]
     code_slide(code)
@@ -145,7 +146,7 @@ def main(argv):
       'O(n²) worse case, usually O(n)',
       '(n = number of possible breaks)')
 
-    with open('sample.tex') as f:
+    with open(path_of('sample.tex')) as f:
         code = f.read()
     code = code.split('\n', 1)[1].rsplit('\n', 2)[0]
     code_slide(code)
@@ -791,7 +792,7 @@ def slide_layout(narrow=0):
     )
 
 def center_formula(d, path, formula_scale=32):
-    r = PySide2.QtSvg.QSvgRenderer(path)
+    r = PySide2.QtSvg.QSvgRenderer(path_of(path))
     b = r.viewBox()
     w = b.width() * formula_scale
     h = b.height() * formula_scale
@@ -874,4 +875,9 @@ def run_and_draw_centered(actions, fonts, line, next_line, painter):
     return line
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    parser = argparse.ArgumentParser(description='Generate slides')
+    parser.add_argument("path", type=str, default="book.pdf", nargs="?",
+                        help="The file path to write the pdf to")
+    args = parser.parse_args()
+
+    main(args.path)
