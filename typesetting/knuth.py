@@ -10,6 +10,23 @@ NONWORD = re.compile(r'(\W+)')
 BREAKING_SPACE = re.compile(r'[ \n]+')
 ZERO_WIDTH_BREAK = Glue(0, 0, 0)
 
+
+class LineLengthCalculator:
+    def __init__(self, start_line, next_line_func):
+        self._start_line = start_line
+        self._lines = [start_line]
+        self._next_line_func = next_line_func
+
+    def __getitem__(self, i):
+        assert i >= 0
+        while i >= len(self._lines):
+            self._lines.append(self.next_line())
+        return self._lines[i].column.width
+
+    def next_line(self):
+        return self._next_line_func(self._lines[-1])
+
+
 def knuth_paragraph(actions, a, fonts, line, next_line,
                     indent, first_indent, fonts_and_texts):
 
@@ -21,7 +38,6 @@ def knuth_paragraph(actions, a, fonts, line, next_line,
     height = max(fonts[name].height for name, text in fonts_and_texts)
 
     line = next_line(line, leading, height)
-    line_lengths = [line.column.width]  # TODO: support interesting shapes
 
     if first_indent is True:
         first_indent = font.height
@@ -69,8 +85,6 @@ def knuth_paragraph(actions, a, fonts, line, next_line,
             if space:
                 yield space_glue
 
-    indented_lengths = [length - indent for length in line_lengths]
-
     for font_name, text in fonts_and_texts:
         font = fonts[font_name]
         width_of = font.width_of
@@ -82,10 +96,17 @@ def knuth_paragraph(actions, a, fonts, line, next_line,
 
     olist.add_closing_penalty()
 
+    # line_lengths = [line.column.width]  # TODO: support interesting shapes
+    # indented_lengths = [length - indent for length in line_lengths]
+
     for tolerance in 1, 2, 3, 4, 5, 6, 7:  # TODO: went to 7 to avoid errors
+        line_lengths = LineLengthCalculator(line,
+                                           lambda l: next_line(l, leading, height))
         try:
             breaks = olist.compute_breakpoints(
-                indented_lengths, tolerance=tolerance)
+                line_lengths,
+                tolerance=tolerance,
+            )
         except RuntimeError:
             pass
         else:
@@ -100,8 +121,7 @@ def knuth_paragraph(actions, a, fonts, line, next_line,
     font = 'body-roman'
 
     for i, breakpoint in enumerate(breaks[1:]):
-        r = olist.compute_adjustment_ratio(start, breakpoint, i,
-                                           indented_lengths)
+        r = olist.compute_adjustment_ratio(start, breakpoint, line.column.width)
 
         #r = 1.0
 

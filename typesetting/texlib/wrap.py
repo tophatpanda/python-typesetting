@@ -172,7 +172,7 @@ class ObjectList(list):
 
         return self.sum_shrink[pos2] - self.sum_shrink[pos1]
 
-    def compute_adjustment_ratio(self, pos1, pos2, line, line_lengths):
+    def compute_adjustment_ratio(self, pos1, pos2, available_length):
         "Compute adjustment ratio for the line between pos1 and pos2"
         length = self.measure_width(pos1, pos2)
         if self[pos2].is_penalty(): length += self[pos2].width
@@ -182,11 +182,6 @@ class ObjectList(list):
         # Get the length of the current line; if the line_lengths list
         # is too short, the last value is always used for subsequent
         # lines.
-
-        if line < len(line_lengths):
-            available_length = line_lengths[line]
-        else:
-            available_length = line_lengths[-1]
 
         # Compute how much the contents of the line would have to be
         # stretched or shrunk to fit into the available space.
@@ -353,7 +348,12 @@ class ObjectList(list):
             # of the line formed by breaking at A and B.  The resulting
             breaks = []                 # List of feasible breaks
             for A in active_nodes[:]:
-                r = self.compute_adjustment_ratio(A.position, i, A.line, line_lengths)
+                try:
+                    available_length = line_lengths[A.line]
+                except IndexError:
+                    available_length = line_lengths[-1]
+                # _debug = hasattr(self[A.position], "character") and self[A.position].character == "sub"
+                r = self.compute_adjustment_ratio(A.position, i, available_length)
                 if self.debug:
                     print('\tr=', r)
                     print('\tline=', A.line)
