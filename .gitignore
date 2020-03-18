@@ -2,3 +2,5 @@
 .cache/
 book.pdf
 typesetting.egg-info/
+.venv/
+*~
