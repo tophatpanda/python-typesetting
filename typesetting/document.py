@@ -4,7 +4,7 @@ from PySide2.QtWidgets import QApplication
 
 class Renderer(object):
 
-    def __init__(self, page_width, page_height, crop_margin_width=0):
+    def __init__(self, path, page_width, page_height, crop_margin_width=0):
         self.page_width = page_width
         self.page_height = page_height
         self.margin_width = crop_margin_width
@@ -22,7 +22,7 @@ class Renderer(object):
         # print(f)
         names = QFontDatabase.applicationFontFamilies(f)
         # print(names)
-        self.writer = QPdfWriter('book.pdf')
+        self.writer = QPdfWriter(path)
         size = QSizeF((2 * crop_margin_width + page_width),
                       (2 * crop_margin_width + page_height))
         self.writer.setPageSizeMM(size)
