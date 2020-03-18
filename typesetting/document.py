@@ -1,9 +1,6 @@
 from PySide2.QtCore import QSizeF, Qt, QPoint, QMarginsF
-from PySide2.QtGui import QPainter, QPdfWriter, QFontDatabase, QPen
+from PySide2.QtGui import QPainter, QPdfWriter, QFontDatabase, QPen, QPageSize, QPagedPaintDevice
 from PySide2.QtWidgets import QApplication
-
-#inch = 72
-mm = 25.4 / 72
 
 class Renderer(object):
 
@@ -22,12 +19,12 @@ class Renderer(object):
         f = QFontDatabase.addApplicationFont('../../fonts/GenBasB.ttf')
         f = QFontDatabase.addApplicationFont('../../fonts/GenBasR.ttf')
         #f = QFontDatabase.addApplicationFont('../../fonts/Inconsolata-Regular.ttf')
-        print(f)
+        # print(f)
         names = QFontDatabase.applicationFontFamilies(f)
-        print(names)
+        # print(names)
         self.writer = QPdfWriter('book.pdf')
-        size = QSizeF((2 * crop_margin_width + page_width) * mm,
-                      (2 * crop_margin_width + page_height) * mm)
+        size = QSizeF((2 * crop_margin_width + page_width),
+                      (2 * crop_margin_width + page_height))
         self.writer.setPageSizeMM(size)
         margins = QMarginsF(crop_margin_width, crop_margin_width,
                             crop_margin_width, crop_margin_width)

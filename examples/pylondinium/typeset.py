@@ -20,21 +20,24 @@ from typesetting.knuth import knuth_paragraph
 from typesetting.pyside2_backend import get_fonts
 from typesetting.skeleton import single_column_layout, unroll
 
+inch_to_mm = 25.4 / 72
+
 def main(argv):
     parser = argparse.ArgumentParser(description='Generate slides')
     parser.parse_args(argv)
 
-    os.chdir(os.path.dirname(__file__))
+    if os.path.dirname(__file__):
+        os.chdir(os.path.dirname(__file__))
 
     factor = 72 / 4  # TODO: have Renderer pull from layout instead?
-    d = Renderer(16 * factor, 9 * factor)
+    d = Renderer(16 * factor * inch_to_mm, 9 * factor * inch_to_mm)
 
     fonts = get_fonts(d.painter, [
         ('bold', 'Gentium Basic', 'Bold', 12),
         ('old-standard', 'Old Standard TT', 'Roman', 12),
         ('roman', 'Gentium Basic', 'Roman', 12),
         ('roman-small', 'Gentium Basic', 'Roman', 4), #?
-        ('typewriter', 'Courier', 'Roman', 9),
+        ('typewriter', 'Courier New', 'Roman', 9),
         #('typewriter', 'Inconsolata', 'Roman', 10),
         #('typewriter', 'Ubuntu Mono', 'Roman', 9),
     ])
@@ -85,9 +88,6 @@ def main(argv):
     pm = PySide2.QtGui.QPixmap('tex-and-metafont-book.jpg')
     n = 2
     d.painter.drawPixmap(1200, 100, 1200 * n, 1196 * n, pm)
-
-    d.painter.end()
-    return
 
     s('τέχνη', 'craft / art')
 
