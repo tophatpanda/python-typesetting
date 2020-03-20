@@ -1,6 +1,3 @@
-"""Example with more advanced text layout
-"""
-import argparse
 import os
 
 from typesetting import document as doc
@@ -11,15 +8,12 @@ from typesetting.skeleton import frame_layout, unroll, Page, Column, Line
 from PySide2.QtCore import Qt, QPoint
 from PySide2.QtGui import QPen
 
-
 this_dir = os.path.dirname(__file__)
+mm = 72 / 25.4
 
 
 def path_of(name):
     return os.path.join(this_dir, name)
-
-
-mm = 72 / 25.4
 
 
 def custom_layout(page_width, page_height):
@@ -81,7 +75,7 @@ def custom_layout(page_width, page_height):
 def render(out_file):
     story = []
 
-    with open(path_of("dagon.txt"), "r", encoding="utf8") as f:
+    with open("dagon.txt", "r", encoding="utf8") as f:
         for line in f:
             if line:
                 story.append((c.avoid_widows_and_orphans,))
