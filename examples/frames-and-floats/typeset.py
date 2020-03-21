@@ -1,4 +1,5 @@
 import os
+import argparse
 
 from typesetting import document as doc
 from typesetting import composing as c
@@ -72,7 +73,7 @@ def custom_layout(page_width, page_height):
     return next_line
 
 
-def render(out_file):
+def render():
     story = []
 
     with open("dagon.txt", "r", encoding="utf8") as f:
@@ -82,7 +83,7 @@ def render(out_file):
                 story.append((
                     knuth.knuth_paragraph, 0, 0, [('roman', line.rstrip())]))
 
-    renderer = doc.Renderer(out_file, 210, 297)
+    renderer = doc.Renderer(210, 297)
     fonts = get_fonts(renderer.painter, [
         ('bold', 'Gentium Basic', 'Bold', 8),
         ('roman', 'Gentium Basic', 'Roman', 8),
@@ -121,8 +122,8 @@ def render(out_file):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("path", type=str, default="book.pdf", nargs="?",
-                        help="The file path to write the pdf to")
+    # parser.add_argument("path", type=str, default="book.pdf", nargs="?",
+    #                     help="The file path to write the pdf to")
     args = parser.parse_args()
 
-    render(args.path)
+    render()
