@@ -38,3 +38,7 @@ def as_mm(qty):
 
 def as_pt(qty):
     return qty.to(pt).magnitude
+
+
+def as_inch(qty):
+    return qty.to(inch).magnitude

@@ -2,7 +2,8 @@
 
 from collections import namedtuple
 
-from .units import as_pt
+from .units import as_pt, pt
+import pint
 
 Font = namedtuple('Font', 'ascent descent height leading')
 
@@ -24,13 +25,13 @@ def single_column_layout(width, height, top, bottom, inner, outer):
             left = inner
         else:
             left = outer
-        return Column(page, id, as_pt(left), as_pt(top), as_pt(column_width), as_pt(column_height))
+        return Column(page, id, left, top, column_width, column_height)
 
     def next_line(line, leading, height):
         if line:
             column = line.column
             y = line.y + height + leading
-            if y <= column.height:
+            if y <= as_pt(column.height):
                 return Line(line, column, y, [])
         else:
             column = None

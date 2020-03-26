@@ -1,5 +1,6 @@
 import sys
 from .skeleton import Line, unroll
+from . import units
 
 def run(actions, fonts, line, next_line):
     a = 0
@@ -216,7 +217,7 @@ def ragged_paragraph(actions, a, fonts, line, next_line, fonts_and_texts):
 
     unwrapped_lines = split_texts_into_lines(fonts_and_texts)
     wrapped_lines = wrap_long_lines(fonts, unwrapped_lines,
-                                    tmpline.column.width)
+                                    units.as_pt(tmpline.column.width))
 
     for tuples in wrapped_lines:
         #print(tuples)
@@ -242,13 +243,13 @@ def centered_paragraph(actions, a, fonts, line, next_line, fonts_and_texts):
 
     unwrapped_lines = split_texts_into_lines(fonts_and_texts)
     wrapped_lines = wrap_long_lines(fonts, unwrapped_lines,
-                                    tmpline.column.width)
+                                    units.as_pt(tmpline.column.width))
 
     for tuples in wrapped_lines:
         #print(tuples)
         line = next_line(line, leading, height)
         content_width = sum(width for font_name, text, width in tuples)
-        x = (line.column.width - content_width) / 2.0
+        x = (units.as_pt(line.column.width) - content_width) / 2.0
         for font_name, text, width in tuples:
             line.graphics.append((draw_text, x, font_name, text))
             x += width
@@ -284,11 +285,14 @@ def split_texts_into_lines(fonts_and_texts):
 # def wrap_lines(lines_of_fonts_and_texts):
 
 def draw_text(fonts, line, painter, x, font_name, text):
-    pt = 1200 / 72.0
     font = fonts[font_name]
     painter.setFont(font.qt_font)
-    painter.drawText((line.column.x + x) * pt,
-                     (line.column.y + line.y - font.descent) * pt,
+
+    x = x * units.pt
+    y_offset = (line.y - font.descent) * units.pt
+
+    painter.drawText(units.as_inch(line.column.x + x) * 1200,
+                     units.as_inch(line.column.y + y_offset) * 1200,
                      text)
 
 def die(*args):
