@@ -8,7 +8,7 @@ from typesetting.pyside2_backend import get_fonts
 from typesetting.skeleton import frame_layout, unroll, Page, Column, Line
 from PySide2.QtCore import Qt, QPoint
 from PySide2.QtGui import QPen
-from typesetting.units import mm, as_pt, pt
+from typesetting.units import mm
 
 this_dir = os.path.dirname(__file__)
 
@@ -62,13 +62,13 @@ def custom_layout(page_width, page_height):
     def next_line(line, leading, height):
         if line:
             column = line.column
-            y = line.y + (height + leading) * pt
+            y = line.y + height + leading
             if y <= column.height:
                 return Line(line, column, y, [])
         else:
             column = None
 
-        return Line(line, next_column(column), height * pt, [])
+        return Line(line, next_column(column), height, [])
 
     return next_line
 
@@ -95,7 +95,7 @@ def render():
         pen = QPen(Qt.black, 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
         painter.setPen(pen)
         for l, t, w, h in frames:
-            pt = 1200 / 72.0
+            pt = 1200 / 72.0  # conversion from points to dots, 1200 dpi
             points = [QPoint(x * pt, y * pt) for x, y in
                       [(l, t), (l + w, t), (l + w, t + h), (l, t + h)]]
             for i in range(len(points)):

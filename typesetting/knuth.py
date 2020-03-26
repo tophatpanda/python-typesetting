@@ -35,8 +35,8 @@ def knuth_paragraph(actions, a, fonts, line, next_line,
     font = fonts[font_name]
     width_of = font.width_of
 
-    leading = max(fonts[name].leading for name, text in fonts_and_texts)
-    height = max(fonts[name].height for name, text in fonts_and_texts)
+    leading = max(fonts[name].leading for name, text in fonts_and_texts) * units.pt
+    height = max(fonts[name].height for name, text in fonts_and_texts) * units.pt
 
     line = next_line(line, leading, height)
 

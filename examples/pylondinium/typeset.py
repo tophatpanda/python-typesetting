@@ -58,7 +58,7 @@ def main(argv):
         set out fair and square with no contradictions.
 
         """.strip())]),
-        (space_before_and_after, 8, 2),
+        (space_before_and_after, 8 * units.pt, 2 * units.pt),
         (knuth_paragraph, 0, 0, [('bold', """
         2. Concerning Pipe-weed
         """.strip())]),

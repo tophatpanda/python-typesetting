@@ -12,7 +12,7 @@ def call_action(actions, a, fonts, line, next_line):
     action, *args = actions[a]
     return action(actions, a, fonts, line, next_line, *args)
 
-def add_leading(line, next_line, leading=9999999):
+def add_leading(line, next_line, leading=9999999 * units.pt):
     """Add `leading` to the leading of the first line after `line`."""
     def next_line2(line2, leading2, height):
         if line2 is line:
@@ -25,7 +25,7 @@ def new_page(actions, a, fonts, line, next_line):
         return a + 1, line
     def next_line2(line2, leading, height):
         if line2 is line:
-            leading = 9999999
+            leading = 9999999 * pt
         return next_line(line2, leading, height)
     return call_action(actions, a + 1, fonts, line, next_line2)
 
@@ -33,13 +33,13 @@ def new_recto_page(actions, a, fonts, line, next_line):
     if line is None:
         return a + 1, line
     if line.column.id % 2:
-        line = next_line(line, 9999999, 0)
+        line = next_line(line, 9999999 * pt, 0)
     return new_page(actions, a, fonts, line, next_line)
 
 def blank_line(actions, a, fonts, line, next_line, graphic):
     line2 = next_line(line, 2, 10)
     if line2.column is not line.column:
-        line2 = next_line(line, 9999999, 0)  # TODO: bad solution
+        line2 = next_line(line, 9999999 * pt, 0)  # TODO: bad solution
     return a + 1, line2
 
 def wrap_graphic(original_graphic, original_line):
@@ -62,7 +62,7 @@ def space_before_and_after(actions, a, fonts, line, next_line, above, below):
         line2 = Line(
             previous=line2.previous,
             column=line2.column,
-            y=line2.y + below * units.pt,
+            y=line2.y + below,
             graphics=[wrap_graphic(g, line2) for g in line2.graphics],
         )
 
@@ -184,7 +184,7 @@ def avoid_widows_and_orphans(actions, a, fonts, line, next_line):
     def fancy_next_line(line, leading, height):
         line2 = next_line(line, leading, height)
         if (line2.column.id, line2.y * units.pt) in skips:
-            line2 = next_line(line, 99999, height)
+            line2 = next_line(line, 99999 * units.pt, height)
         return line2
 
     skips = set()
@@ -207,8 +207,8 @@ def avoid_widows_and_orphans(actions, a, fonts, line, next_line):
     return a2, end_line
 
 def ragged_paragraph(actions, a, fonts, line, next_line, fonts_and_texts):
-    leading = max(fonts[name].leading for name, text in fonts_and_texts)
-    height = max(fonts[name].height for name, text in fonts_and_texts)
+    leading = max(fonts[name].leading for name, text in fonts_and_texts) * units.pt
+    height = max(fonts[name].height for name, text in fonts_and_texts) * units.pt
 
     # TODO: this is ugly, creating a throw-away line to learn the width
     # of the upcoming column. Maybe ask for lines as we need them,
@@ -233,8 +233,8 @@ def centered_paragraph(actions, a, fonts, line, next_line, fonts_and_texts):
     # Just like a ragged paragraph, but with different x's. TODO: can
     # probably be refectored to share more code; but can they shared
     # more code without making them both more complicated?
-    leading = max(fonts[name].leading for name, text in fonts_and_texts)
-    height = max(fonts[name].height for name, text in fonts_and_texts)
+    leading = max(fonts[name].leading for name, text in fonts_and_texts) * units.pt
+    height = max(fonts[name].height for name, text in fonts_and_texts) * units.pt
 
     # TODO: this is ugly, creating a throw-away line to learn the width
     # of the upcoming column. Maybe ask for lines as we need them,
