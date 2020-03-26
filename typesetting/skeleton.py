@@ -2,9 +2,11 @@
 
 from collections import namedtuple
 
+from .units import as_pt
+
 Font = namedtuple('Font', 'ascent descent height leading')
 
-Page = namedtuple('Page', 'width height')
+Page = namedtuple('Page', 'xwidth xheight')
 Column = namedtuple('Column', 'page id x y width height')
 Line = namedtuple('Line', 'previous column y graphics')
 
@@ -22,7 +24,7 @@ def single_column_layout(width, height, top, bottom, inner, outer):
             left = inner
         else:
             left = outer
-        return Column(page, id, left, top, column_width, column_height)
+        return Column(page, id, as_pt(left), as_pt(top), as_pt(column_width), as_pt(column_height))
 
     def next_line(line, leading, height):
         if line:

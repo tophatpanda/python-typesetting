@@ -1,10 +1,13 @@
 from PySide2.QtCore import QSizeF, Qt, QPoint, QMarginsF
-from PySide2.QtGui import QPainter, QPdfWriter, QFontDatabase, QPen, QPageSize, QPagedPaintDevice
+from PySide2.QtGui import QPainter, QPdfWriter, QFontDatabase, QPen, QPageSize, QPagedPaintDevice, QPageLayout
 from PySide2.QtWidgets import QApplication
+
+from typesetting.units import mm, as_mm
+
 
 class Renderer(object):
 
-    def __init__(self, page_width, page_height, crop_margin_width=0):
+    def __init__(self, page_width, page_height, crop_margin_width=0 * mm):
         self.page_width = page_width
         self.page_height = page_height
         self.margin_width = crop_margin_width
@@ -23,12 +26,14 @@ class Renderer(object):
         names = QFontDatabase.applicationFontFamilies(f)
         # print(names)
         self.writer = QPdfWriter('book.pdf')
-        size = QSizeF((2 * crop_margin_width + page_width),
-                      (2 * crop_margin_width + page_height))
+        size = QSizeF(as_mm(2 * crop_margin_width + page_width),
+                      as_mm(2 * crop_margin_width + page_height))
+        print(size)
         self.writer.setPageSizeMM(size)
-        margins = QMarginsF(crop_margin_width, crop_margin_width,
-                            crop_margin_width, crop_margin_width)
-        self.writer.setPageMargins(margins)
+        margins = QMarginsF(as_mm(crop_margin_width), as_mm(crop_margin_width),
+                            as_mm(crop_margin_width), as_mm(crop_margin_width))
+        print(margins)
+        self.writer.setPageMargins(margins, QPageLayout.Millimeter)
         self.painter = QPainter(self.writer)
         if self.include_crop_marks:
             self.draw_crop_marks()

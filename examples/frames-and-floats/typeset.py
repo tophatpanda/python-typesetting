@@ -8,8 +8,10 @@ from typesetting.pyside2_backend import get_fonts
 from typesetting.skeleton import frame_layout, unroll, Page, Column, Line
 from PySide2.QtCore import Qt, QPoint
 from PySide2.QtGui import QPen
+from typesetting import units
 
 this_dir = os.path.dirname(__file__)
+
 mm = 72 / 25.4
 
 
@@ -83,13 +85,13 @@ def render():
                 story.append((
                     knuth.knuth_paragraph, 0, 0, [('roman', line.rstrip())]))
 
-    renderer = doc.Renderer(210, 297)
+    renderer = doc.Renderer(210 * units.mm, 297 * units.mm)
     fonts = get_fonts(renderer.painter, [
         ('bold', 'Gentium Basic', 'Bold', 8),
         ('roman', 'Gentium Basic', 'Roman', 8),
     ])
 
-    next_line = custom_layout(210, 297)
+    next_line = custom_layout(210 * units.mm, 297 * units.mm)
 
     def mark_frames(painter, frames):
         pen = QPen(Qt.black, 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)
