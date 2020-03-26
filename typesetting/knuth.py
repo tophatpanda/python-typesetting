@@ -157,7 +157,7 @@ def knuth_draw(fonts, line, painter, xlist):
             painter.setFont(font.qt_font)
         else:
             x = x * units.pt
-            y_offset = (line.y - font.descent) * units.pt
+            y_offset = line.y - font.descent * units.pt
 
             painter.drawText(units.as_inch(line.column.x + x) * 1200,
                              units.as_inch(line.column.y + y_offset) * 1200,

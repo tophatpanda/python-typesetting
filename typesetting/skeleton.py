@@ -7,9 +7,11 @@ import pint
 
 Font = namedtuple('Font', 'ascent descent height leading')
 
-Page = namedtuple('Page', 'xwidth xheight')
+# all x, y, width, height must have units in:
+Page = namedtuple('Page', 'width height')
 Column = namedtuple('Column', 'page id x y width height')
 Line = namedtuple('Line', 'previous column y graphics')
+
 
 def single_column_layout(width, height, top, bottom, inner, outer):
     column_width = width - inner - outer
@@ -30,12 +32,12 @@ def single_column_layout(width, height, top, bottom, inner, outer):
     def next_line(line, leading, height):
         if line:
             column = line.column
-            y = line.y + height + leading
-            if y <= as_pt(column.height):
+            y = line.y + (height + leading) * pt
+            if y <= column.height:
                 return Line(line, column, y, [])
         else:
             column = None
-        return Line(line, next_column(column), height, [])
+        return Line(line, next_column(column), height * pt, [])
 
     return next_line
 
@@ -57,13 +59,13 @@ def frame_layout(frames, page_width, page_height):
     def next_line(line, leading, height):
         if line:
             column = line.column
-            y = line.y + height + leading
+            y = line.y + (height + leading) * pt
             if y <= column.height:
                 return Line(line, column, y, [])
         else:
             column = None
 
-        return Line(line, next_column(column), height, [])
+        return Line(line, next_column(column), height * pt, [])
 
     return next_line
 

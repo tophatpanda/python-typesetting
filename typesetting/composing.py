@@ -62,7 +62,7 @@ def space_before_and_after(actions, a, fonts, line, next_line, above, below):
         line2 = Line(
             previous=line2.previous,
             column=line2.column,
-            y=line2.y + below,
+            y=line2.y + below * units.pt,
             graphics=[wrap_graphic(g, line2) for g in line2.graphics],
         )
 
@@ -170,7 +170,7 @@ def avoid_widows_and_orphans(actions, a, fonts, line, next_line):
         return lines[1].column is not lines[2].column
 
     def fix_orphan():
-        skips.add((lines[1].column.id, lines[1].y))
+        skips.add((lines[1].column.id, lines[1].y * units.pt))
         reflow()
 
     def is_widow():
@@ -178,12 +178,12 @@ def avoid_widows_and_orphans(actions, a, fonts, line, next_line):
 
     def fix_widow():
         nonlocal end_line, lines
-        skips.add((lines[-2].column.id, lines[-2].y))
+        skips.add((lines[-2].column.id, lines[-2].y * units.pt))
         reflow()
 
     def fancy_next_line(line, leading, height):
         line2 = next_line(line, leading, height)
-        if (line2.column.id, line2.y) in skips:
+        if (line2.column.id, line2.y * units.pt) in skips:
             line2 = next_line(line, 99999, height)
         return line2
 
@@ -289,7 +289,7 @@ def draw_text(fonts, line, painter, x, font_name, text):
     painter.setFont(font.qt_font)
 
     x = x * units.pt
-    y_offset = (line.y - font.descent) * units.pt
+    y_offset = line.y - font.descent * units.pt
 
     painter.drawText(units.as_inch(line.column.x + x) * 1200,
                      units.as_inch(line.column.y + y_offset) * 1200,

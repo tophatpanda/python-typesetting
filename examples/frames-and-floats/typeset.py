@@ -8,7 +8,7 @@ from typesetting.pyside2_backend import get_fonts
 from typesetting.skeleton import frame_layout, unroll, Page, Column, Line
 from PySide2.QtCore import Qt, QPoint
 from PySide2.QtGui import QPen
-from typesetting.units import mm, as_pt
+from typesetting.units import mm, as_pt, pt
 
 this_dir = os.path.dirname(__file__)
 
@@ -62,13 +62,13 @@ def custom_layout(page_width, page_height):
     def next_line(line, leading, height):
         if line:
             column = line.column
-            y = line.y + height + leading
-            if y <= as_pt(column.height):
+            y = line.y + (height + leading) * pt
+            if y <= column.height:
                 return Line(line, column, y, [])
         else:
             column = None
 
-        return Line(line, next_column(column), height, [])
+        return Line(line, next_column(column), height * pt, [])
 
     return next_line
 

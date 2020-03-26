@@ -862,13 +862,13 @@ def run_and_draw_centered(actions, fonts, line, next_line, painter):
     assert lines[0] is None
     #assert lines[1].column.page is lines[-1].column.page
     y = lines[-1].y
-    offset = (units.as_pt(lines[1].column.height) - y) / 2
+    offset = (lines[1].column.height - y) / 2
     for line in lines[1:]:
         if page is not None and page is not line.column.page:
             break
         page = line.column.page
         #print(line.graphics)
-        line = line._replace(y = line.y + offset)
+        line = line._replace(y=line.y + offset)
         for graphic in line.graphics:
             function, *args = graphic
             function(fonts, line, painter, *args)
