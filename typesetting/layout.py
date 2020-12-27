@@ -2,8 +2,9 @@ import collections
 import enum
 import functools
 
+from . import textual
 from .backend import get_backend
-from .units import mm
+from .units import mm, inch
 
 
 class Frame(
@@ -23,8 +24,11 @@ class Graphic(
 
 
 class DrawingPrimitive(enum.Enum):
+    ELLIPSE = 0
+    LINE = 2
     RECTANGLE = 4
     TEXT = 10
+    IMAGE = 11
 
 
 def centered(width, height):
@@ -52,6 +56,15 @@ def _draw(rdr, node, pos):
                 rdr.draw_rectangle(x, y, node.width, node.height)
             elif node.draw == DrawingPrimitive.TEXT:
                 rdr.draw_text(x, y, *node.args)
+            elif node.draw == DrawingPrimitive.ELLIPSE:
+                fill, = node.args
+                rdr.draw_ellipse(x, y, node.width, node.height, fill=fill)
+            elif node.draw == DrawingPrimitive.LINE:
+                dx, dy = node.args
+                rdr.draw_line((x, y), (x + dx, y + dy))
+            elif node.draw == DrawingPrimitive.IMAGE:
+                path, = node.args
+                rdr.draw_image(path, x, y, node.width, node.height)
             else:
                 assert 0, node.draw
 
@@ -59,15 +72,60 @@ def _draw(rdr, node, pos):
             assert 0, repr(node.draw)
 
 
+def ellipse(width, height, fill=None):
+    return Graphic(
+        width, height, 0 * mm, 0 * mm, DrawingPrimitive.ELLIPSE, (fill, ))
+
+
 def framed(width, height):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             children = tuple(func(*args, **kwargs))
-            return Frame(width, height, 0 * mm, 0 * mm, children)
+            if width is None:
+                w = max(c.x + c.width for c in children)
+            else:
+                w = width
+            if height is None:
+                h = max(c.y + c.height for c in children)
+            else:
+                h = height
+            return Frame(w, h, 0 * mm, 0 * mm, children)
 
         return wrapper
     return decorator
+
+
+def image(path, width=None, height=None):
+    if width is None or height is None:
+        dimensions = get_backend().peek_image(path)
+        if width is None and height is None:
+            width = dimensions[0] / 300 * inch
+            height = dimensions[1] / 300 * inch
+        elif height is None:
+            height = width * dimensions[1] / dimensions[0]
+        elif width is None:
+            width = height * dimensions[0] / dimensions[1]
+    return Graphic(
+        width, height, 0 * mm, 0 * mm, DrawingPrimitive.IMAGE, (path, ))
+
+
+def line_to(end_x, end_y):
+    return Graphic(
+        end_x, end_y, 0 * mm, 0 * mm, DrawingPrimitive.LINE, (end_x, end_y))
+
+
+def padding(width, height):
+    return Frame(width, height, 0 * mm, 0 * mm, ())
+
+
+def paragraph(font, string, width):
+    y = 0
+    children = []
+    for line in textual.naive_wrap(font, string, width):
+        children.append(text_frame(font, ' '.join(line)).at(0 * mm, y))
+        y += font.height
+    return Frame(width, y, 0 * mm, 0 * mm, tuple(children))
 
 
 def prepare(path, type_faces=()):
@@ -108,4 +166,4 @@ def text_frame(font, string, *, center_of=None, shrink_to_ascent=False):
 
     return Graphic(
         width, height, 0 * mm, 0 * mm,
-        DrawingPrimitive.TEXT, (font, "Summary", x))
+        DrawingPrimitive.TEXT, (font, string, x))

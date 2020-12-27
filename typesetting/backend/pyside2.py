@@ -7,7 +7,9 @@ from PySide2.QtGui import QFontDatabase, QFontMetricsF
 from PySide2.QtGui import QPageLayout
 from PySide2.QtCore import QMarginsF, QSizeF
 from PySide2.QtCore import Qt
+from PySide2.QtCore import QRectF
 from PySide2.QtGui import QPen, QColor, QBrush
+from PySide2.QtGui import QImage
 
 
 from ..units import as_mm, as_inch, mm, pt
@@ -15,6 +17,11 @@ from ..units import as_mm, as_inch, mm, pt
 
 app = QApplication(['pyside2-backend'])
 font_db = QFontDatabase()
+
+
+def peek_image(path):
+    im = QImage(path)
+    return im.width(), im.height()
 
 
 class Font:
@@ -57,6 +64,30 @@ class Renderer:
         self.writer = QPdfWriter(path)
         margins = QMarginsF(0, 0, 0, 0)
         self.writer.setPageMargins(margins, QPageLayout.Millimeter)
+
+    def draw_ellipse(self, x, y, width, height, border_width=8, color=Qt.black, fill=None):
+        if fill is not None:
+            b = self.painter.brush()
+            self.painter.setBrush(QBrush(QColor(*fill)))
+        else:
+            b = None
+        self.painter.setPen(QPen(
+            color, border_width, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+        self.painter.drawEllipse(
+            self.pts(x), self.pts(y), self.pts(width), self.pts(height))
+        if b:
+            self.painter.setBrush(b)
+
+    def draw_image(self, path, x, y, width, height):
+        image = QImage(path)
+        rect = QRectF(self.pts(x), self.pts(y), self.pts(width), self.pts(height))
+        self.painter.drawImage(rect, image)
+
+    def draw_line(self, start, end, border_width=8, color=Qt.black):
+        self.painter.setPen(QPen(
+            color, border_width, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+        self.painter.drawLine(
+            self.pts(start[0]), self.pts(start[1]), self.pts(end[0]), self.pts(end[1]))
 
     def draw_rectangle(self, x, y, width, height, border_width=8, color=Qt.black, fill=None):
         if fill is not None:
