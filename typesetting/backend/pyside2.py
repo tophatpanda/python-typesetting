@@ -12,7 +12,7 @@ from PySide2.QtGui import QPen, QColor, QBrush
 from PySide2.QtGui import QImage
 
 
-from ..units import as_mm, as_inch, mm, pt
+from ..units import as_mm, as_inch, mm, pt, inch
 
 
 app = QApplication(['pyside2-backend'])
@@ -28,13 +28,13 @@ class Font:
     def __init__(self, qt_font, metrics):
         self.qt_font = qt_font
         self.metrics = metrics
-        self.ascent = metrics.ascent() * 72 / 1200 * pt
-        self.descent = metrics.descent() * 72 / 1200 * pt
-        self.height = metrics.height() * 72 / 1200 * pt
-        self.leading = metrics.lineSpacing() * 72 / 1200 * pt - self.height
+        self.ascent = metrics.ascent() * inch / 1200
+        self.descent = metrics.descent() * inch / 1200
+        self.height = metrics.height() * inch / 1200
+        self.leading = metrics.lineSpacing() * inch / 1200 - self.height
 
     def width_of(self, text):
-        return self.metrics.width(text) * 72 / 1200 * pt
+        return self.metrics.width(text) * inch / 1200
 
 
 class TypeFace:

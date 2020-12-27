@@ -55,4 +55,4 @@ def page():
 
 
 if __name__ == '__main__':
-    lt.prepare("out/pyside2.pdf", [face])(page())
+    lt.prepare("out/pyside2.pdf", [face])(page(), debug=True)

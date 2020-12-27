@@ -42,3 +42,11 @@ def as_pt(qty):
 
 def as_inch(qty):
     return qty.to(inch).magnitude
+
+
+def _quantity(value, name, or_none=False):
+    if not isinstance(value, pint.Quantity):
+        if or_none and value is None:
+            pass
+        else:
+            raise TypeError(f"'{name}' must be a quantity, was {value!r}")

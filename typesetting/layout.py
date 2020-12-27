@@ -4,15 +4,27 @@ import functools
 
 from . import textual
 from .backend import get_backend
-from .units import mm, inch
+from .units import mm, inch, as_mm, _quantity
 
 
 class Frame(
-        collections.namedtuple("_Frame", "width height x y children")):
+        collections.namedtuple("_Frame", "width height x y children name")):
     __slots__ = ()
 
     def at(self, x, y):
+        _quantity(x, 'y')
+        _quantity(x, 'y')
         return self._replace(x=x, y=y)
+
+    def __str__(self):
+        return "{t} ({n}) {w}×{h} @ {x},{y} [mm]".format(
+            t=self.__class__.__qualname__,
+            n=self.name,
+            w=round(as_mm(self.width), 1),
+            h=round(as_mm(self.height), 1),
+            x=round(as_mm(self.x), 1),
+            y=round(as_mm(self.y), 1),
+        )
 
 
 class Graphic(
@@ -20,7 +32,19 @@ class Graphic(
     __slots__ = ()
 
     def at(self, x, y):
+        _quantity(x, 'y')
+        _quantity(x, 'y')
         return self._replace(x=x, y=y)
+
+    def __str__(self):
+        return "{t} ({d}) {w}×{h} @ {x},{y} [mm]".format(
+            t=self.__class__.__qualname__,
+            d=self.draw.name if isinstance(self.draw, DrawingPrimitive) else self.draw.__name__,
+            w=round(as_mm(self.width), 1),
+            h=round(as_mm(self.height), 1),
+            x=round(as_mm(self.x), 1),
+            y=round(as_mm(self.y), 1),
+        )
 
 
 class DrawingPrimitive(enum.Enum):
@@ -32,23 +56,34 @@ class DrawingPrimitive(enum.Enum):
 
 
 def centered(width, height):
+    _quantity(width, 'width')
+    _quantity(height, 'height')
+
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             contents = func(*args, **kwargs)
             x = (width - contents.width) / 2
             y = (height - contents.height) / 2
-            return Frame(width, height, 0, 0, (contents.at(x, y), ))
+            return Frame(
+                width, height, 0 * mm, 0 * mm, (contents.at(x, y), ), func.__name__)
 
         return wrapper
     return decorator
 
 
-def _draw(rdr, node, pos):
+def _draw(rdr, node, pos, debug_indent):
+    if debug_indent is not None:
+        print(" " * debug_indent, "└", node)
+
     if isinstance(node, Frame):
         x, y = pos
         for child in node.children:
-            _draw(rdr, child, (x + node.x, y + node.y))
+            if debug_indent is None:
+                _indent = None
+            else:
+                _indent = debug_indent + 1
+            _draw(rdr, child, (x + node.x, y + node.y), _indent)
 
     elif isinstance(node, Graphic):
         x, y = pos
@@ -78,11 +113,16 @@ def _draw(rdr, node, pos):
 
 
 def ellipse(width, height, fill=None):
+    _quantity(width, 'width')
+    _quantity(height, 'height')
     return Graphic(
         width, height, 0 * mm, 0 * mm, DrawingPrimitive.ELLIPSE, (fill, ))
 
 
 def framed(width=None, height=None):
+    _quantity(width, 'width', or_none=True)
+    _quantity(height, 'height', or_none=True)
+
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -95,13 +135,16 @@ def framed(width=None, height=None):
                 h = max(c.y + c.height for c in children)
             else:
                 h = height
-            return Frame(w, h, 0 * mm, 0 * mm, children)
+            return Frame(w, h, 0 * mm, 0 * mm, children, func.__name__)
 
         return wrapper
     return decorator
 
 
 def image(path, width=None, height=None):
+    _quantity(width, 'width', or_none=True)
+    _quantity(height, 'height', or_none=True)
+
     if width is None or height is None:
         dimensions = get_backend().peek_image(path)
         if width is None and height is None:
@@ -116,21 +159,27 @@ def image(path, width=None, height=None):
 
 
 def line_to(end_x, end_y):
+    _quantity(end_x, 'end_x')
+    _quantity(end_y, 'end_y')
+
     return Graphic(
         end_x, end_y, 0 * mm, 0 * mm, DrawingPrimitive.LINE, (end_x, end_y))
 
 
 def padding(width, height):
-    return Frame(width, height, 0 * mm, 0 * mm, ())
+    _quantity(width, 'width')
+    _quantity(height, 'height')
+    return Frame(width, height, 0 * mm, 0 * mm, (), 'padding')
 
 
 def paragraph(font, string, width):
-    y = 0
+    _quantity(width, 'width')
+    y = 0 * mm
     children = []
     for line in textual.naive_wrap(font, string, width):
         children.append(text_frame(font, ' '.join(line)).at(0 * mm, y))
         y += font.height
-    return Frame(width, y, 0 * mm, 0 * mm, tuple(children))
+    return Frame(width, y, 0 * mm, 0 * mm, tuple(children), 'paragraph')
 
 
 def prepare(path, type_faces=()):
@@ -140,10 +189,11 @@ def prepare(path, type_faces=()):
     for face in type_faces:
         face.bind(rdr)
 
-    def render(*pages):
+    def render(*pages, debug=False):
         for page in pages:
+            print("Traversing page:")
             rdr.new_page(page.width, page.height)
-            _draw(rdr, page, (0 * mm, 0 * mm))
+            _draw(rdr, page, (0 * mm, 0 * mm), debug_indent=0 if debug else None)
 
         rdr.save()
 
@@ -151,6 +201,8 @@ def prepare(path, type_faces=()):
 
 
 def rectangle(width, height):
+    _quantity(width, 'width')
+    _quantity(height, 'height')
     return Graphic(
         width, height, 0 * mm, 0 * mm, DrawingPrimitive.RECTANGLE, None)
 
@@ -164,6 +216,7 @@ def stack(*drawables):
 
 
 def text_frame(font, string, *, center_of=None, shrink_to_ascent=False):
+    _quantity(center_of, 'center_of', or_none=True)
     width = font.width_of(string)
 
     if shrink_to_ascent:

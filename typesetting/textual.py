@@ -1,4 +1,5 @@
 from .backend import get_backend
+from .units import mm
 
 
 def type_face(name):
@@ -7,7 +8,7 @@ def type_face(name):
 
 
 def naive_wrap(font, string, width):
-    x = 0
+    x = 0 * mm
     line = []
     space = font.width_of(' ')
     for word in string.split():
