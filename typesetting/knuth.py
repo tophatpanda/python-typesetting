@@ -5,6 +5,7 @@ from __future__ import print_function
 import re
 from .texlib.wrap import ObjectList, Box, Glue, Penalty
 from .hyphenate import hyphenate_word
+from . import units
 
 NONWORD = re.compile(r'(\W+)')
 BREAKING_SPACE = re.compile(r'[ \n]+')
@@ -21,7 +22,7 @@ class LineLengthCalculator:
         assert i >= 0
         while i >= len(self._lines):
             self._lines.append(self.next_line())
-        return self._lines[i].column.width
+        return units.as_pt(self._lines[i].column.width)
 
     def next_line(self):
         return self._next_line_func(self._lines[-1])
@@ -34,8 +35,8 @@ def knuth_paragraph(actions, a, fonts, line, next_line,
     font = fonts[font_name]
     width_of = font.width_of
 
-    leading = max(fonts[name].leading for name, text in fonts_and_texts)
-    height = max(fonts[name].height for name, text in fonts_and_texts)
+    leading = max(fonts[name].leading for name, text in fonts_and_texts) * units.pt
+    height = max(fonts[name].height for name, text in fonts_and_texts) * units.pt
 
     line = next_line(line, leading, height)
 
@@ -121,7 +122,7 @@ def knuth_paragraph(actions, a, fonts, line, next_line,
     font = 'body-roman'
 
     for i, breakpoint in enumerate(breaks[1:]):
-        r = olist.compute_adjustment_ratio(start, breakpoint, line.column.width)
+        r = olist.compute_adjustment_ratio(start, breakpoint, units.as_pt(line.column.width))
 
         #r = 1.0
 
@@ -150,12 +151,14 @@ def knuth_paragraph(actions, a, fonts, line, next_line,
     return a + 1, line.previous
 
 def knuth_draw(fonts, line, painter, xlist):
-    pt = 1200 / 72.0
     for x, text in xlist:
         if x is None:
             font = fonts[text]
             painter.setFont(font.qt_font)
         else:
-            x = (line.column.x + x) * pt
-            y = (line.column.y + line.y - font.descent) * pt
-            painter.drawText(x, y, text)
+            x = x * units.pt
+            y_offset = line.y - font.descent * units.pt
+
+            painter.drawText(units.as_inch(line.column.x + x) * 1200,
+                             units.as_inch(line.column.y + y_offset) * 1200,
+                             text)

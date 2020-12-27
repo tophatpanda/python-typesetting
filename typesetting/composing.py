@@ -1,5 +1,6 @@
 import sys
 from .skeleton import Line, unroll
+from . import units
 
 def run(actions, fonts, line, next_line):
     a = 0
@@ -11,7 +12,7 @@ def call_action(actions, a, fonts, line, next_line):
     action, *args = actions[a]
     return action(actions, a, fonts, line, next_line, *args)
 
-def add_leading(line, next_line, leading=9999999):
+def add_leading(line, next_line, leading=9999999 * units.pt):
     """Add `leading` to the leading of the first line after `line`."""
     def next_line2(line2, leading2, height):
         if line2 is line:
@@ -24,7 +25,7 @@ def new_page(actions, a, fonts, line, next_line):
         return a + 1, line
     def next_line2(line2, leading, height):
         if line2 is line:
-            leading = 9999999
+            leading = 9999999 * pt
         return next_line(line2, leading, height)
     return call_action(actions, a + 1, fonts, line, next_line2)
 
@@ -32,13 +33,13 @@ def new_recto_page(actions, a, fonts, line, next_line):
     if line is None:
         return a + 1, line
     if line.column.id % 2:
-        line = next_line(line, 9999999, 0)
+        line = next_line(line, 9999999 * pt, 0)
     return new_page(actions, a, fonts, line, next_line)
 
 def blank_line(actions, a, fonts, line, next_line, graphic):
     line2 = next_line(line, 2, 10)
     if line2.column is not line.column:
-        line2 = next_line(line, 9999999, 0)  # TODO: bad solution
+        line2 = next_line(line, 9999999 * pt, 0)  # TODO: bad solution
     return a + 1, line2
 
 def wrap_graphic(original_graphic, original_line):
@@ -169,7 +170,7 @@ def avoid_widows_and_orphans(actions, a, fonts, line, next_line):
         return lines[1].column is not lines[2].column
 
     def fix_orphan():
-        skips.add((lines[1].column.id, lines[1].y))
+        skips.add((lines[1].column.id, lines[1].y * units.pt))
         reflow()
 
     def is_widow():
@@ -177,13 +178,13 @@ def avoid_widows_and_orphans(actions, a, fonts, line, next_line):
 
     def fix_widow():
         nonlocal end_line, lines
-        skips.add((lines[-2].column.id, lines[-2].y))
+        skips.add((lines[-2].column.id, lines[-2].y * units.pt))
         reflow()
 
     def fancy_next_line(line, leading, height):
         line2 = next_line(line, leading, height)
-        if (line2.column.id, line2.y) in skips:
-            line2 = next_line(line, 99999, height)
+        if (line2.column.id, line2.y * units.pt) in skips:
+            line2 = next_line(line, 99999 * units.pt, height)
         return line2
 
     skips = set()
@@ -206,8 +207,8 @@ def avoid_widows_and_orphans(actions, a, fonts, line, next_line):
     return a2, end_line
 
 def ragged_paragraph(actions, a, fonts, line, next_line, fonts_and_texts):
-    leading = max(fonts[name].leading for name, text in fonts_and_texts)
-    height = max(fonts[name].height for name, text in fonts_and_texts)
+    leading = max(fonts[name].leading for name, text in fonts_and_texts) * units.pt
+    height = max(fonts[name].height for name, text in fonts_and_texts) * units.pt
 
     # TODO: this is ugly, creating a throw-away line to learn the width
     # of the upcoming column. Maybe ask for lines as we need them,
@@ -216,7 +217,7 @@ def ragged_paragraph(actions, a, fonts, line, next_line, fonts_and_texts):
 
     unwrapped_lines = split_texts_into_lines(fonts_and_texts)
     wrapped_lines = wrap_long_lines(fonts, unwrapped_lines,
-                                    tmpline.column.width)
+                                    units.as_pt(tmpline.column.width))
 
     for tuples in wrapped_lines:
         #print(tuples)
@@ -232,8 +233,8 @@ def centered_paragraph(actions, a, fonts, line, next_line, fonts_and_texts):
     # Just like a ragged paragraph, but with different x's. TODO: can
     # probably be refectored to share more code; but can they shared
     # more code without making them both more complicated?
-    leading = max(fonts[name].leading for name, text in fonts_and_texts)
-    height = max(fonts[name].height for name, text in fonts_and_texts)
+    leading = max(fonts[name].leading for name, text in fonts_and_texts) * units.pt
+    height = max(fonts[name].height for name, text in fonts_and_texts) * units.pt
 
     # TODO: this is ugly, creating a throw-away line to learn the width
     # of the upcoming column. Maybe ask for lines as we need them,
@@ -242,13 +243,13 @@ def centered_paragraph(actions, a, fonts, line, next_line, fonts_and_texts):
 
     unwrapped_lines = split_texts_into_lines(fonts_and_texts)
     wrapped_lines = wrap_long_lines(fonts, unwrapped_lines,
-                                    tmpline.column.width)
+                                    units.as_pt(tmpline.column.width))
 
     for tuples in wrapped_lines:
         #print(tuples)
         line = next_line(line, leading, height)
         content_width = sum(width for font_name, text, width in tuples)
-        x = (line.column.width - content_width) / 2.0
+        x = (units.as_pt(line.column.width) - content_width) / 2.0
         for font_name, text, width in tuples:
             line.graphics.append((draw_text, x, font_name, text))
             x += width
@@ -284,11 +285,14 @@ def split_texts_into_lines(fonts_and_texts):
 # def wrap_lines(lines_of_fonts_and_texts):
 
 def draw_text(fonts, line, painter, x, font_name, text):
-    pt = 1200 / 72.0
     font = fonts[font_name]
     painter.setFont(font.qt_font)
-    painter.drawText((line.column.x + x) * pt,
-                     (line.column.y + line.y - font.descent) * pt,
+
+    x = x * units.pt
+    y_offset = line.y - font.descent * units.pt
+
+    painter.drawText(units.as_inch(line.column.x + x) * 1200,
+                     units.as_inch(line.column.y + y_offset) * 1200,
                      text)
 
 def die(*args):

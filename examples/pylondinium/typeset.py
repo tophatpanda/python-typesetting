@@ -19,8 +19,8 @@ from typesetting.document import Renderer
 from typesetting.knuth import knuth_paragraph
 from typesetting.pyside2_backend import get_fonts
 from typesetting.skeleton import single_column_layout, unroll
+from typesetting import units
 
-inch_to_mm = 25.4 / 72
 
 def main(argv):
     parser = argparse.ArgumentParser(description='Generate slides')
@@ -29,8 +29,8 @@ def main(argv):
     if os.path.dirname(__file__):
         os.chdir(os.path.dirname(__file__))
 
-    factor = 72 / 4  # TODO: have Renderer pull from layout instead?
-    d = Renderer(16 * factor * inch_to_mm, 9 * factor * inch_to_mm)
+    factor = 1 / 4 * units.inch
+    d = Renderer(16 * factor, 9 * factor)
 
     fonts = get_fonts(d.painter, [
         ('bold', 'Gentium Basic', 'Bold', 12),
@@ -58,7 +58,7 @@ def main(argv):
         set out fair and square with no contradictions.
 
         """.strip())]),
-        (space_before_and_after, 8, 2),
+        (space_before_and_after, 8 * units.pt, 2 * units.pt),
         (knuth_paragraph, 0, 0, [('bold', """
         2. Concerning Pipe-weed
         """.strip())]),
@@ -783,7 +783,8 @@ def main(argv):
     d.painter.end()
 
 def slide_layout(narrow=0):
-    factor = 72 / 4
+    factor = 1 / 4 * units.inch
+    # factor = 72 / 4
     margin = (1 + narrow) * factor
     return single_column_layout(
         16 * factor, 9 * factor,
@@ -867,7 +868,7 @@ def run_and_draw_centered(actions, fonts, line, next_line, painter):
             break
         page = line.column.page
         #print(line.graphics)
-        line = line._replace(y = line.y + offset)
+        line = line._replace(y=line.y + offset)
         for graphic in line.graphics:
             function, *args = graphic
             function(fonts, line, painter, *args)
