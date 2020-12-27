@@ -45,12 +45,15 @@ def centered(width, height):
 
 
 def _draw(rdr, node, pos):
-    x, y = pos
     if isinstance(node, Frame):
+        x, y = pos
         for child in node.children:
-            _draw(rdr, child, (x + child.x, y + child.y))
+            _draw(rdr, child, (x + node.x, y + node.y))
 
     elif isinstance(node, Graphic):
+        x, y = pos
+        x += node.x
+        y += node.y
         if isinstance(node.draw, DrawingPrimitive):
             if node.draw == DrawingPrimitive.RECTANGLE:
                 rdr.draw_rectangle(x, y, node.width, node.height)
@@ -70,6 +73,8 @@ def _draw(rdr, node, pos):
 
         else:
             assert 0, repr(node.draw)
+    else:
+        raise TypeError(f"{node!r} is not drawable")
 
 
 def ellipse(width, height, fill=None):
@@ -77,7 +82,7 @@ def ellipse(width, height, fill=None):
         width, height, 0 * mm, 0 * mm, DrawingPrimitive.ELLIPSE, (fill, ))
 
 
-def framed(width, height):
+def framed(width=None, height=None):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -148,6 +153,14 @@ def prepare(path, type_faces=()):
 def rectangle(width, height):
     return Graphic(
         width, height, 0 * mm, 0 * mm, DrawingPrimitive.RECTANGLE, None)
+
+
+@framed()
+def stack(*drawables):
+    y = 0 * mm
+    for c in drawables:
+        yield c.at(x=c.x, y=y)
+        y += c.height
 
 
 def text_frame(font, string, *, center_of=None, shrink_to_ascent=False):
