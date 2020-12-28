@@ -1,10 +1,4 @@
-from .backend import get_backend
 from .units import mm
-
-
-def type_face(name):
-    backend = get_backend()
-    return backend.TypeFace(name)
 
 
 def naive_wrap(font, string, width):

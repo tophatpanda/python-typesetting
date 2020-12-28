@@ -1,9 +1,5 @@
 from typesetting import layout as lt
-from typesetting import textual
 from typesetting.units import mm
-
-
-face = textual.type_face("Adobe Arabic")
 
 
 @lt.framed()
@@ -54,9 +50,6 @@ def page():
 
 
 if __name__ == '__main__':
-    lt.prepare("out/pyside2.pdf", [face])(page(), debug=True)
-
-    # renderer = lt.renderer("out/pyside2.pdf")
-    # face = renderer.type_face("Adobe Arabic")
-    # altface = renderer.type_face("Adobe Arabic")
-    # renderer.render(page(), debug=True)
+    renderer = lt.renderer("out/pyside2.pdf")
+    face = renderer.type_face("Adobe Arabic")
+    renderer.render(page(), debug=True)

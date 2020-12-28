@@ -12,7 +12,8 @@ from PySide2.QtGui import QPen, QColor, QBrush
 from PySide2.QtGui import QImage
 
 
-from ..units import as_mm, as_inch, mm, pt, inch
+from ..units import as_mm, as_inch, mm, inch
+from .._prim import _draw
 
 
 app = QApplication(['pyside2-backend'])
@@ -25,37 +26,31 @@ def peek_image(path):
 
 
 class Font:
-    def __init__(self, qt_font, metrics):
+    def __init__(self, qt_font, metrics, resolution):
         self.qt_font = qt_font
         self.metrics = metrics
-        self.ascent = metrics.ascent() * inch / 1200
-        self.descent = metrics.descent() * inch / 1200
-        self.height = metrics.height() * inch / 1200
-        self.leading = metrics.lineSpacing() * inch / 1200 - self.height
+        self.ascent = metrics.ascent() * inch / resolution
+        self.descent = metrics.descent() * inch / resolution
+        self.height = metrics.height() * inch / resolution
+        self.leading = metrics.lineSpacing() * inch / resolution - self.height
+        self._resolution = resolution
 
     def width_of(self, text):
-        return self.metrics.width(text) * inch / 1200
+        return self.metrics.width(text) * inch / self._resolution
 
 
 class TypeFace:
-    def __init__(self, name):
+    def __init__(self, name, renderer):
         self.name = name
-        self._writer = None
+        self.renderer = renderer
 
-    def bind(self, renderer):
-        self._writer = renderer.writer
-
-    def __call__(self, point_size, renderer=None):
-        if renderer is None:
-            if self._writer is None:
-                raise RuntimeError("Can't produce font without a renderer")
-            else:
-                writer = self._writer
-        else:
-            writer = renderer.writer
-
+    def __call__(self, point_size):
         qt_font = font_db.font(self.name, "Roman", point_size)
-        return Font(qt_font, QFontMetricsF(qt_font, writer))
+        return Font(
+            qt_font,
+            QFontMetricsF(qt_font, self.renderer.writer),
+            self.renderer.writer.resolution(),
+        )
 
 
 class Renderer:
@@ -64,6 +59,9 @@ class Renderer:
         self.writer = QPdfWriter(path)
         margins = QMarginsF(0, 0, 0, 0)
         self.writer.setPageMargins(margins, QPageLayout.Millimeter)
+
+    def type_face(self, name):
+        return TypeFace(name, self)
 
     def draw_ellipse(self, x, y, width, height, border_width=8, color=Qt.black, fill=None):
         if fill is not None:
@@ -116,6 +114,15 @@ class Renderer:
 
     def pts(self, distance):
         return as_inch(distance) * self.writer.resolution()
+
+    def render(self, *pages, debug):
+        for page in pages:
+            if debug:
+                print("Traversing page:")
+            self.new_page(page.width, page.height)
+            _draw(self, page, (0 * mm, 0 * mm), debug_indent=0 if debug else None)
+
+        self.save()
 
     def save(self):
         self.painter.end()
