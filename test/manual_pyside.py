@@ -1,6 +1,6 @@
 from typesetting import layout as lt
 from typesetting import textual
-from typesetting.units import mm, as_mm
+from typesetting.units import mm
 
 
 face = textual.type_face("Adobe Arabic")
@@ -23,8 +23,7 @@ def time_slot(title, when, where, paragraph):
     yield lt.padding(0 * mm, pad).at(0 * mm, frame.y + frame.height)
 
 
-@lt.centered(210 * mm, 297 * mm)
-@lt.framed(180 * mm, 277 * mm)
+@lt.page('A4', 10 * mm, 15 * mm)
 def page():
     yield lt.rectangle(40 * mm, 50 * mm)
     yield lt.stack(
@@ -37,7 +36,6 @@ def page():
             "static timing verification, backend with place and route, EDA and environment "
             "responsibility."), 150 * mm),
     ).at(45 * mm, 0 * mm)
-    # QQQ fill to margin
 
     yield lt.stack(
         time_slot("Integration of WLAN-module in CAN product", "2007", "Assignment at: Kvaser AB",
@@ -52,7 +50,13 @@ def page():
     ).at(60 * mm, 55 * mm)
 
     yield lt.image("./res/Quokka_Gary-Houston_CC-0.jpg", 100 * mm).at(x=0 * mm, y=150 * mm)
+    # QQQ crop
 
 
 if __name__ == '__main__':
     lt.prepare("out/pyside2.pdf", [face])(page(), debug=True)
+
+    # renderer = lt.renderer("out/pyside2.pdf")
+    # face = renderer.type_face("Adobe Arabic")
+    # altface = renderer.type_face("Adobe Arabic")
+    # renderer.render(page(), debug=True)
