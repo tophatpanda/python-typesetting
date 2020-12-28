@@ -60,21 +60,30 @@ def framed(width=None, height=None):
     return decorator
 
 
-def image(path, width=None, height=None):
+def image(path, width=None, height=None, crop=None):
     _quantity(width, 'width', or_none=True)
     _quantity(height, 'height', or_none=True)
 
     if width is None or height is None:
+        # height and width of the source area of the image
         dimensions = get_backend().peek_image(path)
+        if crop is None:
+            sw, sh = dimensions
+        else:
+            sw = dimensions[0] * crop[2]
+            sh = dimensions[1] * crop[3]
+
+        # fill in missing size with scaled source size
         if width is None and height is None:
-            width = dimensions[0] / 300 * inch
-            height = dimensions[1] / 300 * inch
+            width = sw / 300 * inch
+            height = sh / 300 * inch
         elif height is None:
-            height = width * dimensions[1] / dimensions[0]
+            height = width * sh / sw
         elif width is None:
-            width = height * dimensions[0] / dimensions[1]
+            width = height * sw / sh
+
     return Graphic(
-        width, height, 0 * mm, 0 * mm, DrawingPrimitive.IMAGE, (path, ))
+        width, height, 0 * mm, 0 * mm, DrawingPrimitive.IMAGE, (path, crop))
 
 
 def padding(width, height):

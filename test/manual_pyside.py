@@ -110,7 +110,28 @@ def page(cw, ch):
                     "2) A selected body of persons.")),
     ).at(85 * mm, 120 * mm).outline(small_pen)
 
-    # QQQ crop
+    small_head = lt.image(
+        "./res/Quokka_Gary-Houston_CC-0.jpg",
+        0.13 * 80 * mm,
+        crop=(0.33, 0.33, 0.13, 0.18),
+    )
+    medium_head = lt.image(
+        "./res/Quokka_Gary-Houston_CC-0.jpg",
+        0.26 * 80 * mm,
+        crop=(0.33, 0.33, 0.13, 0.18),
+    )
+    large_head = lt.image(
+        "./res/Quokka_Gary-Houston_CC-0.jpg",
+        0.52 * 80 * mm,
+        crop=(0.33, 0.33, 0.13, 0.18),
+    )
+    yield small_head.at(x=40 * mm, y=150 * mm)
+    yield small_head.at(x=45 * mm, y=160 * mm)
+    yield small_head.at(x=53 * mm, y=168 * mm)
+    yield small_head.at(x=63 * mm, y=175 * mm)
+    yield medium_head.at(x=73 * mm, y=177 * mm)
+    yield medium_head.at(x=90 * mm, y=174 * mm)
+    yield large_head.at(x=110 * mm, y=165 * mm)
 
 
 if __name__ == '__main__':

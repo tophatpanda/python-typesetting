@@ -114,10 +114,20 @@ class Renderer:
         self.painter.drawEllipse(
             self.pts(x), self.pts(y), self.pts(width), self.pts(height))
 
-    def draw_image(self, path, x, y, width, height):
+    def draw_image(self, x, y, width, height, path, crop=None):
         image = QImage(path)
         rect = QRectF(self.pts(x), self.pts(y), self.pts(width), self.pts(height))
-        self.painter.drawImage(rect, image)
+        if crop is None:
+            self.painter.drawImage(rect, image)
+        else:
+            sx, sy, sw, sh = crop
+            source_rect = QRectF(
+                sx * image.width(),
+                sy * image.height(),
+                sw * image.width(),
+                sh * image.height(),
+            )
+            self.painter.drawImage(rect, image, source_rect)
 
     def draw_polyline(self, pen, *points):
         self.painter.setPen(pen.qt_pen)

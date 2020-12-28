@@ -178,18 +178,21 @@ def _draw(rdr, node, pos, debug_indent):
         x += node.x
         y += node.y
         if isinstance(node.draw, DrawingPrimitive):
-            if node.draw == DrawingPrimitive.RECTANGLE:
-                rdr.draw_rectangle(x, y, node.width, node.height, *node.args)
-            elif node.draw == DrawingPrimitive.LINE:
+            if node.draw == DrawingPrimitive.LINE:
                 dx, dy, pen = node.args
                 rdr.draw_line((x, y), (x + dx, y + dy), pen)
+            elif node.draw == DrawingPrimitive.RECTANGLE:
+                pen, = node.args
+                rdr.draw_rectangle(x, y, node.width, node.height, pen)
             elif node.draw == DrawingPrimitive.ELLIPSE:
-                rdr.draw_ellipse(x, y, node.width, node.height, *node.args)
+                pen, = node.args
+                rdr.draw_ellipse(x, y, node.width, node.height, pen)
             elif node.draw == DrawingPrimitive.TEXT:
-                rdr.draw_text(x, y, *node.args)
+                font, string, indent = node.args
+                rdr.draw_text(x, y, font, string, indent)
             elif node.draw == DrawingPrimitive.IMAGE:
-                path, = node.args
-                rdr.draw_image(path, x, y, node.width, node.height)
+                path, crop = node.args
+                rdr.draw_image(x, y, node.width, node.height, *node.args)
             elif node.draw == DrawingPrimitive.POLYLINE:
                 pen, *points = node.args
                 rdr.draw_polyline(pen, *((rx + x, ry + y) for rx, ry in points))
