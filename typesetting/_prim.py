@@ -42,7 +42,7 @@ class Frame(Frame, Node):
 
     def outline(self, pen):
         return self._replace(
-            children=self.children + (pen.rectangle(self.width, self.height), ))
+            children=(pen.rectangle(self.width, self.height), ) + self.children)
 
 
 class Graphic(Graphic, Node):
@@ -152,6 +152,7 @@ class DrawingPrimitive(enum.Enum):
     RECTANGLE = 4
     TEXT = 10
     IMAGE = 11
+    POLYLINE = 222
 
 
 def _draw(rdr, node, pos, debug_indent):
@@ -184,6 +185,10 @@ def _draw(rdr, node, pos, debug_indent):
             elif node.draw == DrawingPrimitive.IMAGE:
                 path, = node.args
                 rdr.draw_image(path, x, y, node.width, node.height)
+            elif node.draw == DrawingPrimitive.POLYLINE:
+                pen, *points = node.args
+                print(points)
+                rdr.draw_polyline(pen, *((rx + x, ry + y) for rx, ry in points))
             else:
                 assert 0, node.draw
 

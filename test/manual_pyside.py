@@ -19,15 +19,21 @@ def time_slot(title, when, where, paragraph):
     yield lt.padding(0 * mm, pad).at(0 * mm, frame.y + frame.height)
 
 
-@lt.framed()
 def shape_column(description, pen):
-    yield lt.stack(
+    return lt.stack(
         shape_view(
             description + " circle", pen.ellipse(10 * mm, 10 * mm)),
         shape_view(
             description + " rectangle", pen.rectangle(10 * mm, 10 * mm)),
         shape_view(
             description + " line", pen.line_to(10 * mm, 10 * mm)),
+        shape_view(
+            description + " poly-line", pen.polyline(
+                (0 * mm, 0 * mm),
+                (7 * mm, 10 * mm),
+                (10 * mm, 0 * mm),
+                (7 * mm, 3 * mm),
+            )),
     )
 
 
@@ -37,6 +43,18 @@ def shape_view(description, shape):
     y = (shape.height - text.height) / 2
     yield text.at(0 * mm, y)
     yield shape.at(30 * mm, 0 * mm).outline(small_pen)
+
+
+@lt.framed()
+def shape_display():
+    fill_pen = renderer.pen(20 * pt, (0, 0, 255), fill_color=(255, 255, 0))
+    yield shape_column("filled", fill_pen).at(0 * mm, 0 * mm)
+
+    edge_pen = renderer.pen(20 * pt, (0, 255, 0))
+    yield shape_column("edged", edge_pen).at(42 * mm, 0 * mm)
+
+    fill_only_pen = renderer.pen(20 * pt, None, fill_color=(255, 0, 255))
+    yield shape_column("only fill", fill_only_pen).at(84 * mm, 0 * mm)
 
 
 @lt.page('A4', 10 * mm, 15 * mm)
@@ -63,16 +81,9 @@ def page():
                    "algorithmic acceleration.  System verification was done on FPGA platform with "
                    "production C-code. The ASIC was tested with self checking assembler test cases, "
                    "also producing production test vectors. Implemented in TSMC technology.")),
-    ).at(60 * mm, 55 * mm)
+    ).at(60 * mm, 55 * mm).outline(small_pen)
 
-    fill_pen = renderer.pen(20 * pt, (0, 0, 255), fill_color=(255, 255, 0))
-    yield shape_column("filled", fill_pen).at(0 * mm, 100 * mm)
-
-    edge_pen = renderer.pen(20 * pt, (0, 255, 0))
-    yield shape_column("edged", edge_pen).at(42 * mm, 100 * mm)
-
-    fill_only_pen = renderer.pen(20 * pt, None, fill_color=(255, 0, 255))
-    yield shape_column("only fill", fill_only_pen).at(84 * mm, 100 * mm)
+    yield shape_display().at(0 * mm, 100 * mm)
 
     yield lt.image("./res/Quokka_Gary-Houston_CC-0.jpg", 100 * mm).at(x=0 * mm, y=150 * mm)
     # QQQ crop
@@ -82,5 +93,5 @@ if __name__ == '__main__':
     renderer = lt.renderer("out/pyside2.pdf")
     face = renderer.type_face("Adobe Arabic")
     pen = renderer.pen(20 * pt, fill_color=(255, 255, 255))
-    small_pen = renderer.pen(10 * pt, color=(200, 200, 200))
+    small_pen = renderer.pen(10 * pt, color=(150, 150, 150))
     renderer.render(page(), debug=True)

@@ -8,6 +8,7 @@ from PySide2.QtGui import QPageLayout
 from PySide2.QtCore import QMarginsF, QSizeF
 from PySide2.QtCore import Qt
 from PySide2.QtCore import QRectF
+from PySide2.QtCore import QPoint
 from PySide2.QtGui import QPen, QColor, QBrush
 from PySide2.QtGui import QImage
 
@@ -64,13 +65,6 @@ class Pen:
         return Graphic(
             width, height, 0 * mm, 0 * mm, DrawingPrimitive.ELLIPSE, (self, ))
 
-    def rectangle(self, width, height):
-        _quantity(width, 'width')
-        _quantity(height, 'height')
-        return Graphic(
-            width, height, 0 * mm, 0 * mm,
-            DrawingPrimitive.RECTANGLE, (self, ))
-
     def line_to(self, end_x, end_y):
         _quantity(end_x, 'end_x')
         _quantity(end_y, 'end_y')
@@ -78,6 +72,30 @@ class Pen:
         return Graphic(
             end_x, end_y, 0 * mm, 0 * mm,
             DrawingPrimitive.LINE, (end_x, end_y, self))
+
+    def polyline(self, *points):
+        points = tuple(points)
+        width = 0 * mm
+        height = 0 * mm
+
+        for p in points:
+            x, y = p
+            _quantity(x, 'x-positions')
+            _quantity(y, 'y-positions')
+            if x > width:
+                width = x
+            if y > height:
+                height = y
+        return Graphic(
+            width, height, 0 * mm, 0 * mm,
+            DrawingPrimitive.POLYLINE, (self, *points))
+
+    def rectangle(self, width, height):
+        _quantity(width, 'width')
+        _quantity(height, 'height')
+        return Graphic(
+            width, height, 0 * mm, 0 * mm,
+            DrawingPrimitive.RECTANGLE, (self, ))
 
 
 class Renderer:
@@ -100,6 +118,12 @@ class Renderer:
         image = QImage(path)
         rect = QRectF(self.pts(x), self.pts(y), self.pts(width), self.pts(height))
         self.painter.drawImage(rect, image)
+
+    def draw_polyline(self, pen, *points):
+        self.painter.setPen(pen.qt_pen)
+        self.painter.setBrush(pen.qt_brush)
+        self.painter.drawPolyline(
+            [QPoint(self.pts(x), self.pts(y)) for x, y in points])
 
     def draw_line(self, start, end, pen):
         self.painter.setPen(pen.qt_pen)
