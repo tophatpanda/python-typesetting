@@ -1,5 +1,5 @@
 from typesetting import layout as lt
-from typesetting.units import mm
+from typesetting.units import mm, pt
 
 
 @lt.framed()
@@ -14,14 +14,14 @@ def time_slot(title, when, where, paragraph):
 
     pad = 5 * mm
 
-    yield lt.line_to(0 * mm, frame.y + frame.height + pad).at(2 * mm, 0 * mm)
-    yield lt.ellipse(4 * mm, 4 * mm, (255, 255, 255)).at(0 * mm, 0.5 * mm)
+    yield pen.line_to(0 * mm, frame.y + frame.height + pad).at(2 * mm, 0 * mm)
+    yield pen.ellipse(4 * mm, 4 * mm, (255, 255, 255)).at(0 * mm, 0.5 * mm)
     yield lt.padding(0 * mm, pad).at(0 * mm, frame.y + frame.height)
 
 
 @lt.page('A4', 10 * mm, 15 * mm)
 def page():
-    yield lt.rectangle(40 * mm, 50 * mm)
+    yield pen.rectangle(40 * mm, 50 * mm)
     yield lt.stack(
         lt.text_frame(face(12), "Summary"),
         lt.paragraph(face(10), (
@@ -52,4 +52,5 @@ def page():
 if __name__ == '__main__':
     renderer = lt.renderer("out/pyside2.pdf")
     face = renderer.type_face("Adobe Arabic")
+    pen = renderer.pen(20 * pt, fill_color=(255, 255, 255))
     renderer.render(page(), debug=True)

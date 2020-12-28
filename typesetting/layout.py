@@ -23,13 +23,6 @@ def centered(width, height):
     return decorator
 
 
-def ellipse(width, height, fill=None):
-    _quantity(width, 'width')
-    _quantity(height, 'height')
-    return Graphic(
-        width, height, 0 * mm, 0 * mm, DrawingPrimitive.ELLIPSE, (fill, ))
-
-
 def framed(width=None, height=None):
     _quantity(width, 'width', or_none=True)
     _quantity(height, 'height', or_none=True)
@@ -69,14 +62,6 @@ def image(path, width=None, height=None):
         width, height, 0 * mm, 0 * mm, DrawingPrimitive.IMAGE, (path, ))
 
 
-def line_to(end_x, end_y):
-    _quantity(end_x, 'end_x')
-    _quantity(end_y, 'end_y')
-
-    return Graphic(
-        end_x, end_y, 0 * mm, 0 * mm, DrawingPrimitive.LINE, (end_x, end_y))
-
-
 def padding(width, height):
     _quantity(width, 'width')
     _quantity(height, 'height')
@@ -105,13 +90,6 @@ def paragraph(font, string, width):
         children.append(text_frame(font, ' '.join(line)).at(0 * mm, y))
         y += font.height
     return Frame(width, y, 0 * mm, 0 * mm, tuple(children), 'paragraph')
-
-
-def rectangle(width, height):
-    _quantity(width, 'width')
-    _quantity(height, 'height')
-    return Graphic(
-        width, height, 0 * mm, 0 * mm, DrawingPrimitive.RECTANGLE, None)
 
 
 def renderer(*args, **kwargs):

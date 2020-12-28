@@ -164,15 +164,14 @@ def _draw(rdr, node, pos, debug_indent):
         y += node.y
         if isinstance(node.draw, DrawingPrimitive):
             if node.draw == DrawingPrimitive.RECTANGLE:
-                rdr.draw_rectangle(x, y, node.width, node.height)
+                rdr.draw_rectangle(x, y, node.width, node.height, *node.args)
+            elif node.draw == DrawingPrimitive.LINE:
+                dx, dy, pen = node.args
+                rdr.draw_line((x, y), (x + dx, y + dy), pen)
+            elif node.draw == DrawingPrimitive.ELLIPSE:
+                rdr.draw_ellipse(x, y, node.width, node.height, *node.args)
             elif node.draw == DrawingPrimitive.TEXT:
                 rdr.draw_text(x, y, *node.args)
-            elif node.draw == DrawingPrimitive.ELLIPSE:
-                fill, = node.args
-                rdr.draw_ellipse(x, y, node.width, node.height, fill=fill)
-            elif node.draw == DrawingPrimitive.LINE:
-                dx, dy = node.args
-                rdr.draw_line((x, y), (x + dx, y + dy))
             elif node.draw == DrawingPrimitive.IMAGE:
                 path, = node.args
                 rdr.draw_image(path, x, y, node.width, node.height)
