@@ -3,13 +3,17 @@ from typesetting.units import mm, pt
 
 
 @lt.framed()
-def time_slot(title, when, where, paragraph):
-    title = lt.text_frame(face(15), title)
-    info = lt.text_frame(face(12), when + ", " + where)
-    yield title.at(x=5 * mm, y=0 * mm)
+def definition(word, plural, paragraph, highlight=False):
+    title = lt.text_frame(face(15), word)
+    info = lt.text_frame(face(12), plural)
+    if highlight:
+        highlight_pen = renderer.pen(20 * pt, None, fill_color=(255, 255, 50))
+        yield title.at(x=5 * mm, y=0 * mm).outline(highlight_pen)
+    else:
+        yield title.at(x=5 * mm, y=0 * mm)
     yield info.at(x=title.width + 7 * mm, y=1 * mm)
 
-    frame = lt.paragraph(face(8), paragraph, 115 * mm).at(5 * mm, 6 * mm)
+    frame = lt.paragraph(face(8), paragraph, 80 * mm).at(5 * mm, 6 * mm)
     yield frame
 
     pad = 5 * mm
@@ -57,35 +61,55 @@ def shape_display():
     yield shape_column("only fill", fill_only_pen).at(84 * mm, 0 * mm)
 
 
+@lt.framed()
+def header(cw):
+    para_w = 140 * mm
+    para_x = (cw - para_w) / 2
+    yield lt.stack(
+        lt.frame(
+            pen.line_to(cw - 10 * mm, 0 * mm).at(5 * mm, 5 * mm),
+            pen.ellipse(40 * mm, 10 * mm).at(cw / 2 - 20 * mm, 0 * mm),
+        ),
+        lt.text_frame(face(30), "Summary", center_of=cw),
+        lt.paragraph(face(15), (
+            "This is a test page, testing the various primitives, which can "
+            "then be exported with a backend to verify that this backend is "
+            "fully featured and then check that the result looks as "
+            "expected."), para_w).at(para_x, 0 * mm),
+        pen.polyline(
+            (0 * mm, 0 * mm),
+            (20 * mm, 10 * mm),
+            (cw - 20 * mm, 10 * mm),
+            (cw, 0 * mm),
+        ),
+    )
+
+
 @lt.page('A4', 10 * mm, 15 * mm)
-def page():
-    yield pen.rectangle(40 * mm, 50 * mm)
+def page(cw, ch):
+    yield header(cw)
+
+    yield lt.center(shape_display(), cw).at(0 * mm, 60 * mm)
+
+    yield lt.image("./res/Quokka_Gary-Houston_CC-0.jpg", 80 * mm).at(x=0 * mm, y=120 * mm)
     yield lt.stack(
-        lt.text_frame(face(12), "Summary"),
-        lt.paragraph(face(10), (
-            "Experienced from a large number of hardware and software related projects and "
-            "involved in many different fields: system development, architecture development "
-            "and specification, requirement specification, system modeling, verification and "
-            "test, integration, processor development, application development, synthesis, "
-            "static timing verification, backend with place and route, EDA and environment "
-            "responsibility."), 150 * mm),
-    ).at(45 * mm, 0 * mm)
+        definition("quoit", "(plural quoits)",
+                   ("1) A flat disc of metal or stone thrown at a target in the game of quoits. "
+                    "2) A ring of rubber or rope similarly used in the game of deck-quoits. "
+                    "3) The flat stone covering a cromlech. "
+                    "4) The discus used in ancient sports.")),
+        definition("quokka", "(plural quokkas)",
+                   "A cat-sized marsupial, Setonix brachyurus, of southwestern Australia.",
+                   highlight=True),
+        definition("quorum", "(plural quorums or quora)",
+                   ("1) The minimum number of members required for a group to "
+                    "officially conduct business and to cast votes, often but "
+                    "not necessarily a majority or supermajority. "
+                    "‟We can discuss the issue tonight, but cannot vote until we "
+                    "have a quorum”. "
+                    "2) A selected body of persons.")),
+    ).at(85 * mm, 120 * mm).outline(small_pen)
 
-    yield lt.stack(
-        time_slot("Integration of WLAN-module in CAN product", "2007", "Assignment at: Kvaser AB",
-                  ("Integrating the BG211W WLAN module to a M32C/87 microcontroller. Extending "
-                   "debug functionality and logging to include http channel. General functional "
-                   "development and debugging.")),
-        time_slot("ASIC for biometric application", "2006", "Assignment at: Fingerprints Card AB",
-                  ("Designing ASIC with 8051 processor and digital signal processing hardware for "
-                   "algorithmic acceleration.  System verification was done on FPGA platform with "
-                   "production C-code. The ASIC was tested with self checking assembler test cases, "
-                   "also producing production test vectors. Implemented in TSMC technology.")),
-    ).at(60 * mm, 55 * mm).outline(small_pen)
-
-    yield shape_display().at(0 * mm, 100 * mm)
-
-    yield lt.image("./res/Quokka_Gary-Houston_CC-0.jpg", 100 * mm).at(x=0 * mm, y=150 * mm)
     # QQQ crop
 
 

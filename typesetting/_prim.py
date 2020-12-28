@@ -56,9 +56,13 @@ class Graphic(Graphic, Node):
             return self.draw.__name__
 
     def outline(self, pen):
+        children = (
+            pen.rectangle(self.width, self.height),
+            self.at(0 * mm, 0 * mm),
+        )
         return Frame(
             self.width, self.height, self.x, self.y,
-            (self.at(0 * mm, 0 * mm), pen.rectangle(self.width, self.height)), self.name)
+            children, self.name)
 
 
 class LazyPage(Node):
@@ -132,7 +136,8 @@ class LazyPage(Node):
         self.content_y = top
 
         self.children = (
-            c.move(self.content_x, self.content_y) for c in children)
+            c.move(self.content_x, self.content_y) for c in children
+            if isinstance(c, Node))
         self.name = name
 
     def __str__(self):
@@ -187,7 +192,6 @@ def _draw(rdr, node, pos, debug_indent):
                 rdr.draw_image(path, x, y, node.width, node.height)
             elif node.draw == DrawingPrimitive.POLYLINE:
                 pen, *points = node.args
-                print(points)
                 rdr.draw_polyline(pen, *((rx + x, ry + y) for rx, ry in points))
             else:
                 assert 0, node.draw

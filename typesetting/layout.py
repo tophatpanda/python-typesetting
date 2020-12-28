@@ -6,21 +6,40 @@ from .units import mm, inch, _quantity
 from ._prim import Frame, Graphic, LazyPage, DrawingPrimitive
 
 
-def centered(width, height):
+def center(node, width=None, height=None):
+    if width is None:
+        width = node.width
+    if height is None:
+        height = node.height
+    x = (width - node.width) / 2
+    y = (height - node.height) / 2
+    return Frame(
+        width, height, 0 * mm, 0 * mm, (node.at(x, y), ), 'centered')
+
+
+def centered(width=None, height=None):
     _quantity(width, 'width')
     _quantity(height, 'height')
 
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            contents = func(*args, **kwargs)
-            x = (width - contents.width) / 2
-            y = (height - contents.height) / 2
-            return Frame(
-                width, height, 0 * mm, 0 * mm, (contents.at(x, y), ), 'centered')
+            center(func(*args, **kwargs), width, height)
 
         return wrapper
     return decorator
+
+
+def frame(*nodes, name='group', width=None, height=None):
+    if width is None:
+        w = max(n.x + n.width for n in nodes)
+    else:
+        w = width
+    if height is None:
+        h = max(n.y + n.height for n in nodes)
+    else:
+        h = height
+    return Frame(w, h, 0 * mm, 0 * mm, nodes, name)
 
 
 def framed(width=None, height=None):
@@ -30,16 +49,12 @@ def framed(width=None, height=None):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            children = tuple(func(*args, **kwargs))
-            if width is None:
-                w = max(c.x + c.width for c in children)
-            else:
-                w = width
-            if height is None:
-                h = max(c.y + c.height for c in children)
-            else:
-                h = height
-            return Frame(w, h, 0 * mm, 0 * mm, children, func.__name__)
+            return frame(
+                *func(*args, **kwargs),
+                width=width,
+                height=height,
+                name=func.__name__,
+            )
 
         return wrapper
     return decorator
@@ -71,11 +86,13 @@ def padding(width, height):
 def page(page_size, *margins):
     size_tuple = LazyPage.size(page_size)
     margin_tuple = LazyPage.margins(*margins)
+    content_width = size_tuple[0] - margin_tuple[1] - margin_tuple[3]
+    content_height = size_tuple[1] - margin_tuple[0] - margin_tuple[2]
 
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            generator = func(*args, **kwargs)
+            generator = func(content_width, content_height, *args, **kwargs)
             return LazyPage(size_tuple, margin_tuple, generator, func.__name__)
 
         return wrapper
