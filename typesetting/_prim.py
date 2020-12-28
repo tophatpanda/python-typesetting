@@ -40,6 +40,10 @@ Graphic = collections.namedtuple("_Graphic", "width height x y draw args")
 class Frame(Frame, Node):
     __slots__ = ()
 
+    def outline(self, pen):
+        return self._replace(
+            children=self.children + (pen.rectangle(self.width, self.height), ))
+
 
 class Graphic(Graphic, Node):
     __slots__ = ()
@@ -50,6 +54,11 @@ class Graphic(Graphic, Node):
             return self.draw.name
         else:
             return self.draw.__name__
+
+    def outline(self, pen):
+        return Frame(
+            self.width, self.height, self.x, self.y,
+            (self.at(0 * mm, 0 * mm), pen.rectangle(self.width, self.height)), self.name)
 
 
 class LazyPage(Node):

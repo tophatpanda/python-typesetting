@@ -58,7 +58,7 @@ class Pen:
         self.qt_pen = qt_pen
         self.qt_brush = qt_brush
 
-    def ellipse(self, width, height, pen):
+    def ellipse(self, width, height):
         _quantity(width, 'width')
         _quantity(height, 'height')
         return Graphic(

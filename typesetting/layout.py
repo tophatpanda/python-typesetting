@@ -3,7 +3,7 @@ import functools
 from . import textual
 from .backend import get_backend
 from .units import mm, inch, _quantity
-from ._prim import Frame, Graphic, LazyPage, DrawingPrimitive, _draw
+from ._prim import Frame, Graphic, LazyPage, DrawingPrimitive
 
 
 def centered(width, height):

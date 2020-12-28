@@ -15,8 +15,28 @@ def time_slot(title, when, where, paragraph):
     pad = 5 * mm
 
     yield pen.line_to(0 * mm, frame.y + frame.height + pad).at(2 * mm, 0 * mm)
-    yield pen.ellipse(4 * mm, 4 * mm, (255, 255, 255)).at(0 * mm, 0.5 * mm)
+    yield pen.ellipse(4 * mm, 4 * mm).at(0 * mm, 0.5 * mm)
     yield lt.padding(0 * mm, pad).at(0 * mm, frame.y + frame.height)
+
+
+@lt.framed()
+def shape_column(description, pen):
+    yield lt.stack(
+        shape_view(
+            description + " circle", pen.ellipse(10 * mm, 10 * mm)),
+        shape_view(
+            description + " rectangle", pen.rectangle(10 * mm, 10 * mm)),
+        shape_view(
+            description + " line", pen.line_to(10 * mm, 10 * mm)),
+    )
+
+
+@lt.framed()
+def shape_view(description, shape):
+    text = lt.text_frame(face(15), description)
+    y = (shape.height - text.height) / 2
+    yield text.at(0 * mm, y)
+    yield shape.at(30 * mm, 0 * mm).outline(small_pen)
 
 
 @lt.page('A4', 10 * mm, 15 * mm)
@@ -45,6 +65,15 @@ def page():
                    "also producing production test vectors. Implemented in TSMC technology.")),
     ).at(60 * mm, 55 * mm)
 
+    fill_pen = renderer.pen(20 * pt, (0, 0, 255), fill_color=(255, 255, 0))
+    yield shape_column("filled", fill_pen).at(0 * mm, 100 * mm)
+
+    edge_pen = renderer.pen(20 * pt, (0, 255, 0))
+    yield shape_column("edged", edge_pen).at(42 * mm, 100 * mm)
+
+    fill_only_pen = renderer.pen(20 * pt, None, fill_color=(255, 0, 255))
+    yield shape_column("only fill", fill_only_pen).at(84 * mm, 100 * mm)
+
     yield lt.image("./res/Quokka_Gary-Houston_CC-0.jpg", 100 * mm).at(x=0 * mm, y=150 * mm)
     # QQQ crop
 
@@ -53,4 +82,5 @@ if __name__ == '__main__':
     renderer = lt.renderer("out/pyside2.pdf")
     face = renderer.type_face("Adobe Arabic")
     pen = renderer.pen(20 * pt, fill_color=(255, 255, 255))
+    small_pen = renderer.pen(10 * pt, color=(200, 200, 200))
     renderer.render(page(), debug=True)
